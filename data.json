@@ -430,48 +430,48 @@
       "home": "Czechia",
       "away": "Mexico",
       "date": "2026-06-24",
-      "real_home": null,
-      "real_away": null
+      "real_home": 0,
+      "real_away": 3
     },
     {
       "id": "50_South Africa_Korea Republic",
       "home": "South Africa",
       "away": "Korea Republic",
       "date": "2026-06-24",
-      "real_home": null,
-      "real_away": null
+      "real_home": 1,
+      "real_away": 0
     },
     {
       "id": "51_Switzerland_Canada",
       "home": "Switzerland",
       "away": "Canada",
       "date": "2026-06-24",
-      "real_home": null,
-      "real_away": null
+      "real_home": 2,
+      "real_away": 1
     },
     {
       "id": "52_Bosnia and Herzegovina_Qatar",
       "home": "Bosnia and Herzegovina",
       "away": "Qatar",
       "date": "2026-06-24",
-      "real_home": null,
-      "real_away": null
+      "real_home": 3,
+      "real_away": 1
     },
     {
       "id": "53_Scotland_Brazil",
       "home": "Scotland",
       "away": "Brazil",
       "date": "2026-06-24",
-      "real_home": null,
-      "real_away": null
+      "real_home": 0,
+      "real_away": 3
     },
     {
       "id": "54_Morocco_Haiti",
       "home": "Morocco",
       "away": "Haiti",
       "date": "2026-06-24",
-      "real_home": null,
-      "real_away": null
+      "real_home": 4,
+      "real_away": 2
     },
     {
       "id": "55_T\u00fcrkiye_USA",

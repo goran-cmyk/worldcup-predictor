@@ -534,6 +534,12 @@
 
 <!-- MATCHES -->
 <div id="page-matches" class="page">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+    <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;font-weight:600;color:var(--muted);cursor:pointer">
+      <input type="checkbox" id="show-finished" onchange="renderMatches()" style="width:16px;height:16px;accent-color:var(--green)">
+      Show finished matches
+    </label>
+  </div>
   <div id="matches-list"></div>
 </div>
 
@@ -724,12 +730,15 @@ function renderMatches() {
   const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const upcoming = state.matches.filter(m => m.date >= today && m.real_home === null);
   const other = state.matches.filter(m => !(m.date >= today && m.real_home === null));
+  const showFinished = document.getElementById('show-finished')?.checked;
   let html = '';
   if (upcoming.length) {
     html += `<div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">📅 Upcoming</div>`;
     html += upcoming.map(m => matchCard(m, true)).join('');
+  } else {
+    html += `<div class="empty-state"><div class="emoji">📅</div><p>No upcoming matches</p></div>`;
   }
-  if (other.length) {
+  if (showFinished && other.length) {
     html += `<div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 8px">✅ Finished</div>`;
     html += other.map(m => matchCard(m, true)).join('');
   }
