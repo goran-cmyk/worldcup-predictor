@@ -13,15 +13,61 @@ DEFAULT_DATA = {
     "predictions": {}
 }
 
+# Use PostgreSQL if DATABASE_URL is set, otherwise fall back to local file
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+def get_db():
+    import psycopg2
+    url = DATABASE_URL
+    if url and url.startswith('postgres://'):
+        url = url.replace('postgres://', 'postgresql://', 1)
+    return psycopg2.connect(url)
+
+def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('''CREATE TABLE IF NOT EXISTS store (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+    )''')
+    conn.commit()
+    cur.close()
+    conn.close()
+
 def load():
-    if not os.path.exists(DATA_FILE):
-        save(DEFAULT_DATA)
-    with open(DATA_FILE) as f:
-        return json.load(f)
+    if not DATABASE_URL:
+        if not os.path.exists(DATA_FILE):
+            save(DEFAULT_DATA)
+        with open(DATA_FILE) as f:
+            return json.load(f)
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT value FROM store WHERE key = 'data'")
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    if row:
+        return json.loads(row[0])
+    save(DEFAULT_DATA)
+    return DEFAULT_DATA
 
 def save(data):
-    with open(DATA_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
+    if not DATABASE_URL:
+        with open(DATA_FILE, 'w') as f:
+            json.dump(data, f, indent=2)
+        return
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('''INSERT INTO store (key, value) VALUES ('data', %s)
+                   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value''',
+                (json.dumps(data),))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+if DATABASE_URL:
+    with app.app_context():
+        init_db()
 
 def score_prediction(pred_home, pred_away, real_home, real_away):
     if real_home is None or real_away is None:
