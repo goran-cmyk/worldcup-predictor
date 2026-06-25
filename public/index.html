@@ -525,7 +525,7 @@
     <div id="upcoming-matches"></div>
   </div>
   <div style="margin-bottom:12px; font-size:0.8rem; color:var(--muted); text-align:center;">
-    3 pts exact score · 2 pts correct result · 0 pts otherwise
+    3 pts exact score · 1 pt correct result · 0 pts otherwise
   </div>
   <div class="card" id="leaderboard-list">
     <div class="empty-state"><div class="emoji">🏆</div><p>No players yet</p></div>
@@ -775,7 +775,7 @@ function matchCard(m, showAll) {
     if (played && myPred) {
       const pts = score(myPred.home, myPred.away, m.real_home, m.real_away);
       const cls = pts === 3 ? 'exact' : pts === 2 ? 'correct' : 'wrong';
-      const label = pts === 3 ? '✅ Exact! +3' : pts === 2 ? '👍 Correct result +2' : '❌ Wrong +0';
+      const label = pts === 3 ? '✅ Exact! +3' : pts === 1 ? '👍 Correct result +1' : '❌ Wrong +0';
       predSection = `<div class="predict-section">
         <label>Your prediction: ${myPred.home}–${myPred.away}</label>
         <span class="pred-badge ${cls}">${label}</span>
@@ -892,7 +892,7 @@ function score(ph, pa, rh, ra) {
   if (ph === rh && pa === ra) return 3;
   const pr = ph > pa ? 'H' : ph < pa ? 'A' : 'D';
   const rr = rh > ra ? 'H' : rh < ra ? 'A' : 'D';
-  return pr === rr ? 2 : 0;
+  return pr === rr ? 1 : 0;
 }
 
 // --- API calls ---

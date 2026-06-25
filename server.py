@@ -76,7 +76,7 @@ def score_prediction(pred_home, pred_away, real_home, real_away):
         return 3
     pred_result = 'H' if pred_home > pred_away else ('A' if pred_home < pred_away else 'D')
     real_result = 'H' if real_home > real_away else ('A' if real_home < real_away else 'D')
-    return 2 if pred_result == real_result else 0
+    return 1 if pred_result == real_result else 0
 
 @app.route('/')
 def index():
