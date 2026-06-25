@@ -670,8 +670,9 @@ function onPlayerChange() {
 }
 
 function renderUpcoming() {
-  const today = new Date().toISOString().slice(0, 10);
-  const upcoming = state.matches.filter(m => m.date > today && m.real_home === null);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const upcoming = state.matches.filter(m => m.date >= today && m.real_home === null);
   const section = document.getElementById('upcoming-section');
   const el = document.getElementById('upcoming-matches');
   if (!upcoming.length) { section.style.display = 'none'; return; }
@@ -719,9 +720,10 @@ function renderMatches() {
     el.innerHTML = '<div class="empty-state"><div class="emoji">📅</div><p>No matches yet</p></div>';
     return;
   }
-  const today = new Date().toISOString().slice(0, 10);
-  const upcoming = state.matches.filter(m => m.date > today && m.real_home === null);
-  const other = state.matches.filter(m => !(m.date > today && m.real_home === null));
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const upcoming = state.matches.filter(m => m.date >= today && m.real_home === null);
+  const other = state.matches.filter(m => !(m.date >= today && m.real_home === null));
   let html = '';
   if (upcoming.length) {
     html += `<div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">📅 Upcoming</div>`;
@@ -749,7 +751,8 @@ function renderMyPredictions() {
 
 function matchCard(m, showAll) {
   const played = m.real_home !== null && m.real_away !== null;
-  const isPast = m.date && m.date <= new Date().toISOString().slice(0, 10);
+  const _n = new Date(); const _td = `${_n.getFullYear()}-${String(_n.getMonth()+1).padStart(2,'0')}-${String(_n.getDate()).padStart(2,'0')}`;
+  const isPast = m.date && m.date < _td;
   const myPred = (state.predictions[currentPlayer] || {})[m.id];
   const showPredForm = currentPlayer && !played && !showAll;
   const showAllPreds = showAll && played;
