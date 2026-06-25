@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(ls /opt/homebrew/bin/node /usr/local/bin/node ~/.nvm/versions/node/*/bin/node 2>/dev/null | head -5; which python3)",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}
