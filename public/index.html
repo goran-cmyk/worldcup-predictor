@@ -866,23 +866,20 @@ function renderAdmin() {
     aml.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No matches yet</p>';
     return;
   }
-  aml.innerHTML = state.matches.map(m => {
+  aml.innerHTML = state.matches.map((m, idx) => {
     const played = m.real_home !== null;
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
       <div style="flex:1;min-width:140px">
         <div style="font-weight:700">${esc(m.home)} vs ${esc(m.away)}</div>
         ${m.date ? `<div style="font-size:0.75rem;color:var(--muted)">${m.date}</div>` : ''}
       </div>
-      ${played
-        ? `<span style="font-weight:700;font-size:1.1rem;color:var(--green)">${m.real_home}–${m.real_away}</span>`
-        : `<div class="score-entry">
-            <input type="number" min="0" max="20" placeholder="H" id="rh_${m.id}" style="width:48px;padding:6px;border:2px solid var(--border);border-radius:8px;text-align:center;font-size:1rem;font-weight:700;outline:none">
-            <span>–</span>
-            <input type="number" min="0" max="20" placeholder="A" id="ra_${m.id}" style="width:48px;padding:6px;border:2px solid var(--border);border-radius:8px;text-align:center;font-size:1rem;font-weight:700;outline:none">
-            <button class="btn btn-green btn-sm" onclick="setScore('${m.id}')">Set</button>
-          </div>`
-      }
-      <button class="delete-btn" onclick="deleteMatch('${m.id}')" title="Delete match">🗑️</button>
+      <div class="score-entry">
+        <input type="number" min="0" max="20" placeholder="H" id="rh_${idx}" value="${played ? m.real_home : ''}" style="width:48px;padding:6px;border:2px solid var(--border);border-radius:8px;text-align:center;font-size:1rem;font-weight:700;outline:none">
+        <span>–</span>
+        <input type="number" min="0" max="20" placeholder="A" id="ra_${idx}" value="${played ? m.real_away : ''}" style="width:48px;padding:6px;border:2px solid var(--border);border-radius:8px;text-align:center;font-size:1rem;font-weight:700;outline:none">
+        <button class="btn btn-green btn-sm" data-idx="${idx}" data-mid="${esc(m.id)}" onclick="setScore(this)">${played ? 'Update' : 'Set'}</button>
+      </div>
+      <button class="delete-btn" data-mid="${esc(m.id)}" onclick="deleteMatch(this)" title="Delete match">🗑️</button>
     </div>`;
   }).join('');
 }
@@ -950,20 +947,27 @@ async function addMatch() {
   } else toast(res.error || 'Error', 'error');
 }
 
-async function deleteMatch(mid) {
+async function deleteMatch(btn) {
+  const mid = btn.dataset.mid;
   if (!confirm('Delete this match and all predictions for it?')) return;
-  const res = await apiAdmin(`/api/admin/match/${encodeURIComponent(mid)}`, 'DELETE');
-  if (res.ok) { toast('Match deleted', 'success'); fetchData(); }
-  else toast(res.error || 'Error', 'error');
+  try {
+    const res = await apiAdmin(`/api/admin/match/${encodeURIComponent(mid)}`, 'DELETE');
+    if (res.ok) { toast('Match deleted', 'success'); fetchData(); }
+    else toast(res.error || 'Error', 'error');
+  } catch (e) { toast('Network error', 'error'); }
 }
 
-async function setScore(mid) {
-  const rh = document.getElementById('rh_' + mid)?.value;
-  const ra = document.getElementById('ra_' + mid)?.value;
+async function setScore(btn) {
+  const idx = btn.dataset.idx;
+  const mid = btn.dataset.mid;
+  const rh = document.getElementById('rh_' + idx)?.value;
+  const ra = document.getElementById('ra_' + idx)?.value;
   if (rh === '' || ra === '') return toast('Enter both scores', 'error');
-  const res = await apiAdmin(`/api/admin/match/${encodeURIComponent(mid)}/score`, 'POST', { home: parseInt(rh), away: parseInt(ra) });
-  if (res.ok) { toast('Score saved! ⚽', 'success'); fetchData(); }
-  else toast(res.error || 'Error', 'error');
+  try {
+    const res = await apiAdmin('/api/admin/score', 'POST', { match_id: mid, home: parseInt(rh), away: parseInt(ra) });
+    if (res.ok) { toast('Score saved! ⚽', 'success'); fetchData(); }
+    else toast(res.error || 'Error', 'error');
+  } catch (e) { toast('Network error', 'error'); }
 }
 
 async function apiAdmin(url, method = 'GET', body = null) {

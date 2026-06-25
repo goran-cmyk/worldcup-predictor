@@ -195,6 +195,21 @@ def set_score(match_id):
             return jsonify({'ok': True})
     return jsonify({'error': 'Not found'}), 404
 
+@app.route('/api/admin/score', methods=['POST'])
+def set_score_by_id():
+    if not check_admin(request):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = load()
+    body = request.json
+    match_id = body.get('match_id', '')
+    for match in data['matches']:
+        if match['id'] == match_id:
+            match['real_home'] = int(body['home'])
+            match['real_away'] = int(body['away'])
+            save(data)
+            return jsonify({'ok': True})
+    return jsonify({'error': 'Not found'}), 404
+
 @app.route('/api/predict', methods=['POST'])
 def predict():
     data = load()
