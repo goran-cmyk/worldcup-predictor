@@ -254,4 +254,4 @@ if __name__ == '__main__':
     os.makedirs('public', exist_ok=True)
     print("Starting World Cup Predictor on http://localhost:8080")
     port = int(os.environ.get('PORT', 8080))
-    app.run(debug=False, port=port)
+    app.run(debug=False, host='0.0.0.0', port=port)
