@@ -1,0 +1,5 @@
+[phases.install]
+cmds = ["pip install flask openpyxl"]
+
+[start]
+cmd = "python server.py"
