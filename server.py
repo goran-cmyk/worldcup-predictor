@@ -210,6 +210,24 @@ def set_score_by_id():
             return jsonify({'ok': True})
     return jsonify({'error': 'Not found'}), 404
 
+@app.route('/api/admin/predict', methods=['POST'])
+def admin_set_prediction():
+    if not check_admin(request):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = load()
+    body = request.json
+    player = body.get('player', '').strip()
+    match_id = body.get('match_id')
+    ph = body.get('home')
+    pa = body.get('away')
+    if player not in data['players']:
+        return jsonify({'error': 'Unknown player'}), 400
+    if player not in data['predictions']:
+        data['predictions'][player] = {}
+    data['predictions'][player][match_id] = {'home': int(ph), 'away': int(pa)}
+    save(data)
+    return jsonify({'ok': True})
+
 @app.route('/api/predict', methods=['POST'])
 def predict():
     data = load()
