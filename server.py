@@ -389,7 +389,8 @@ def import_predictions():
             skipped_players.append(player)
             continue
         ws = wb[sheet_name]
-        for row in list(ws.iter_rows(values_only=True))[1:]:
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if not row[1] and not row[2]: break  # stop at first fully empty row
             if not row[1] or not row[2]: continue
             home_xl = str(row[1]).strip()
             away_xl = str(row[2]).strip()
