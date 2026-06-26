@@ -586,6 +586,13 @@
           </label>
         </div>
       </div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="font-size:0.82rem;font-weight:700;margin-bottom:6px">🎯 Predictions (multi-sheet .xlsx)</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px">One sheet per player (sheet name = player name). Columns: <code>date, home team, away team, actual score, projected score</code></div>
+        <label class="btn btn-outline btn-sm" style="cursor:pointer;display:inline-block">
+          Choose file <input type="file" accept=".xlsx" style="display:none" onchange="importFile('predictions', this)">
+        </label>
+      </div>
       <div id="import-result" style="margin-top:12px;font-size:0.82rem;display:none"></div>
     </div>
   </div>
@@ -1060,6 +1067,9 @@ async function importFile(type, input) {
   if (data.ok) {
     if (type === 'players') {
       el.innerHTML = `<span style="color:var(--green)">✅ Added ${data.added.length} players${data.skipped.length ? `, skipped ${data.skipped.length} duplicates` : ''}</span>`;
+    } else if (type === 'predictions') {
+      const skip = data.skipped_players?.length ? `, ${data.skipped_players.length} unknown players` : '';
+      el.innerHTML = `<span style="color:var(--green)">✅ Updated ${data.updated} predictions${skip}</span>`;
     } else {
       el.innerHTML = `<span style="color:var(--green)">✅ Added ${data.added} matches${data.skipped ? `, skipped ${data.skipped} duplicates/updated` : ''}</span>`;
     }

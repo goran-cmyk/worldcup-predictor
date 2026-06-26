@@ -325,6 +325,89 @@ def import_matches():
     save(data)
     return jsonify({'ok': True, 'added': added, 'skipped': skipped})
 
+PRED_ABBREVS = {
+    'ivory': "côte d'ivoire", 'ger': 'germany', 'mex': 'mexico',
+    'ecu': 'ecuador', 'arg': 'argentina', 'por': 'portugal',
+    'uzb': 'uzbekistan', 'eng': 'england', 'cro': 'croatia',
+    'nor': 'norway', 'sen': 'senegal', 'usa': 'united states',
+    'bra': 'brazil', 'fra': 'france', 'esp': 'spain',
+    'ned': 'netherlands', 'bel': 'belgium', 'uru': 'uruguay',
+    'jpn': 'japan', 'jap': 'japan', 'aus': 'australia',
+    'korea': 'korea republic', 'mor': 'morocco', 'mar': 'morocco',
+    'sui': 'switzerland', 'swi': 'switzerland', 'pol': 'poland',
+    'den': 'denmark', 'swe': 'sweden', 'ser': 'serbia',
+    'nzl': 'new zealand', 'nz': 'new zealand', 'cam': 'cameroon',
+    'tun': 'tunisia', 'sau': 'saudi arabia', 'ksa': 'saudi arabia',
+    'col': 'colombia', 'jor': 'jordan', 'irq': 'iraq',
+    'alg': 'algeria', 'aut': 'austria', 'pan': 'panama',
+    'gha': 'ghana', 'crc': 'costa rica', 'pak': 'pakistan',
+}
+
+def _hints_team(word, team_name):
+    import re as _re
+    w = word.lower().strip('.,!?;:')
+    t = team_name.lower()
+    if len(w) < 2: return False
+    if w in t or t.startswith(w): return True
+    mapped = PRED_ABBREVS.get(w)
+    if mapped and (t == mapped or t.startswith(mapped[:4])): return True
+    return False
+
+def _parse_pred_cell(cell, home, away):
+    import re as _re, datetime as _dt
+    if cell is None: return None
+    if isinstance(cell, _dt.datetime):
+        return (cell.month, cell.day)
+    s = str(cell).strip().lstrip('`').strip()
+    s = _re.sub(r'(?i)^draw\s*', '', s).strip()
+    nums = _re.findall(r'\d+', s)
+    if len(nums) < 2: return None
+    n1, n2 = int(nums[0]), int(nums[1])
+    words = _re.findall(r'[a-zA-Z\.]+', s)
+    home_hit = any(_hints_team(w, home) for w in words)
+    away_hit = any(_hints_team(w, away) for w in words)
+    if away_hit and not home_hit:
+        return (n2, n1)
+    return (n1, n2)
+
+@app.route('/api/admin/import/predictions', methods=['POST'])
+def import_predictions():
+    if not check_admin(request):
+        return jsonify({'error': 'Unauthorized'}), 401
+    f = request.files.get('file')
+    if not f:
+        return jsonify({'error': 'No file'}), 400
+    if not f.filename.lower().endswith('.xlsx'):
+        return jsonify({'error': 'Only .xlsx files supported for predictions'}), 400
+    wb = openpyxl.load_workbook(f, data_only=True)
+    data = load()
+    by_teams = {(m['home'].lower(), m['away'].lower()): m for m in data['matches']}
+    updated, skipped_players, skipped_preds = 0, [], 0
+    for sheet_name in wb.sheetnames:
+        player = sheet_name.strip()
+        if player not in data['players']:
+            skipped_players.append(player)
+            continue
+        ws = wb[sheet_name]
+        for row in list(ws.iter_rows(values_only=True))[1:]:
+            if not row[1] or not row[2]: continue
+            home_xl = str(row[1]).strip()
+            away_xl = str(row[2]).strip()
+            match = by_teams.get((home_xl.lower(), away_xl.lower()))
+            if not match: continue
+            pred = _parse_pred_cell(row[4], home_xl, away_xl)
+            if pred is None:
+                skipped_preds += 1
+                continue
+            nh, na = pred
+            if player not in data['predictions']:
+                data['predictions'][player] = {}
+            data['predictions'][player][match['id']] = {'home': nh, 'away': na}
+            updated += 1
+    save(data)
+    return jsonify({'ok': True, 'updated': updated,
+                    'skipped_players': skipped_players, 'skipped_preds': skipped_preds})
+
 def check_admin(req):
     pw = req.headers.get('X-Admin-Password', '')
     return hashlib.sha256(pw.encode()).hexdigest() == ADMIN_PASSWORD
