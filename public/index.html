@@ -1072,8 +1072,6 @@ async function importFile(type, input) {
     input.value = '';
     return;
   }
-  const el = document.getElementById('import-result');
-  el.style.display = 'block';
   if (data.ok) {
     if (type === 'players') {
       el.innerHTML = `<span style="color:var(--green)">✅ Added ${data.added.length} players${data.skipped.length ? `, skipped ${data.skipped.length} duplicates` : ''}</span>`;
