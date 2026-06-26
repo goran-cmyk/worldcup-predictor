@@ -1054,14 +1054,24 @@ function esc(str) {
 async function importFile(type, input) {
   const file = input.files[0];
   if (!file) return;
+  const el = document.getElementById('import-result');
+  el.style.display = 'block';
+  el.innerHTML = '<span style="color:var(--muted)">⏳ Uploading…</span>';
   const form = new FormData();
   form.append('file', file);
-  const res = await fetch(`/api/admin/import/${type}`, {
-    method: 'POST',
-    headers: { 'X-Admin-Password': adminPw || '' },
-    body: form
-  });
-  const data = await res.json();
+  let data;
+  try {
+    const res = await fetch(`/api/admin/import/${type}`, {
+      method: 'POST',
+      headers: { 'X-Admin-Password': adminPw || '' },
+      body: form
+    });
+    data = await res.json();
+  } catch(e) {
+    el.innerHTML = `<span style="color:var(--red)">❌ Upload failed: ${e.message}</span>`;
+    input.value = '';
+    return;
+  }
   const el = document.getElementById('import-result');
   el.style.display = 'block';
   if (data.ok) {
