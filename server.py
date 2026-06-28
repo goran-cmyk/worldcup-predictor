@@ -210,6 +210,20 @@ def set_score_by_id():
             return jsonify({'ok': True})
     return jsonify({'error': 'Not found'}), 404
 
+@app.route('/api/admin/starting_points', methods=['POST'])
+def set_starting_points():
+    if not check_admin(request):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = load()
+    body = request.json
+    player = body.get('player', '').strip()
+    pts = body.get('points')
+    if player not in data['players']:
+        return jsonify({'error': 'Unknown player'}), 400
+    data.setdefault('starting_points', {})[player] = int(pts)
+    save(data)
+    return jsonify({'ok': True})
+
 @app.route('/api/admin/predict', methods=['POST'])
 def admin_set_prediction():
     if not check_admin(request):
