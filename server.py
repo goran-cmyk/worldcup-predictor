@@ -91,9 +91,10 @@ def get_data():
 
     # Build leaderboard
     starting_points = data.get('starting_points', {})
+    disqualified = set(data.get('disqualified', []))
     leaderboard = {}
     for player in players:
-        leaderboard[player] = {'name': player, 'points': starting_points.get(player, 0), 'exact': 0, 'correct': 0, 'played': 0}
+        leaderboard[player] = {'name': player, 'points': starting_points.get(player, 0), 'exact': 0, 'correct': 0, 'played': 0, 'disqualified': player in disqualified}
 
     for match in matches:
         mid = match['id']
@@ -108,10 +109,13 @@ def get_data():
                     leaderboard[player]['played'] += 1
                     if pts == 3:
                         leaderboard[player]['exact'] += 1
-                    elif pts == 2:
+                    elif pts == 1:
                         leaderboard[player]['correct'] += 1
 
-    leaderboard_list = sorted(leaderboard.values(), key=lambda x: (-x['points'], -x['exact'], x['name']))
+    def lb_sort(x):
+        # DQ players sink to the bottom, otherwise sort by points then exact scores
+        return (1 if x['disqualified'] else 0, -x['points'], -x['exact'], x['name'])
+    leaderboard_list = sorted(leaderboard.values(), key=lb_sort)
 
     return jsonify({
         'players': players,
@@ -221,6 +225,22 @@ def set_starting_points():
     if player not in data['players']:
         return jsonify({'error': 'Unknown player'}), 400
     data.setdefault('starting_points', {})[player] = int(pts)
+    save(data)
+    return jsonify({'ok': True})
+
+@app.route('/api/admin/player/<name>/disqualify', methods=['POST', 'DELETE'])
+def disqualify_player(name):
+    if not check_admin(request):
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = load()
+    if name not in data['players']:
+        return jsonify({'error': 'Not found'}), 404
+    dq = set(data.get('disqualified', []))
+    if request.method == 'POST':
+        dq.add(name)
+    else:
+        dq.discard(name)
+    data['disqualified'] = list(dq)
     save(data)
     return jsonify({'ok': True})
 

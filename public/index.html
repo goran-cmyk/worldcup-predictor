@@ -713,7 +713,9 @@ function renderLeaderboard() {
     el.innerHTML = '<div class="empty-state"><div class="emoji">🏆</div><p>No players yet. Ask your admin to add players!</p></div>';
     return;
   }
-  el.innerHTML = state.leaderboard.map((p, i) => {
+  const active = state.leaderboard.filter(p => !p.disqualified);
+  const dq = state.leaderboard.filter(p => p.disqualified);
+  const rows = active.map((p, i) => {
     const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
     const rankEmoji = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
     return `<div class="lb-row">
@@ -724,7 +726,20 @@ function renderLeaderboard() {
         ${p.exact || p.correct ? `<div class="lb-meta">✅ ${p.exact} exact · 👍 ${p.correct} result</div>` : ''}
       </div>
     </div>`;
-  }).join('');
+  });
+  if (dq.length) {
+    rows.push(`<div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 8px">Disqualified</div>`);
+    dq.forEach(p => {
+      rows.push(`<div class="lb-row" style="opacity:0.45">
+        <div class="lb-rank" style="font-size:0.7rem;font-weight:700;color:#e53e3e">DQ</div>
+        <div class="lb-name" style="text-decoration:line-through">${esc(p.name)}</div>
+        <div>
+          <div class="lb-pts" style="text-decoration:line-through">${p.points} pts</div>
+        </div>
+      </div>`);
+    });
+  }
+  el.innerHTML = rows.join('');
 }
 
 function renderMatches() {
