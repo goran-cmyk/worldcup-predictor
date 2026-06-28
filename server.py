@@ -367,7 +367,11 @@ def _parse_pred_cell(cell, home, away):
     home_hit = any(_hints_team(w, home) for w in words)
     away_hit = any(_hints_team(w, away) for w in words)
     if away_hit and not home_hit:
-        return (n2, n1)
+        # "3-0 Ivory" → Ivory scored 3 (winner-first), swap to home=0,away=3
+        # "0-2 ENGLAND" → already home-away order, don't swap
+        if n1 > n2:
+            return (n2, n1)
+        return (n1, n2)
     return (n1, n2)
 
 @app.route('/api/admin/import/predictions', methods=['POST'])
